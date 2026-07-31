@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Word Document-like Editor Styling */
+.tiptap {
+  outline: none;
+  min-height: 500px;
+  padding: 72px 96px;
+  font-family: 'Times New Roman', 'Mangal', 'Noto Sans Devanagari', serif;
+  font-size: 14pt;
+  line-height: 1.5;
+  color: #000000;
+  background: white;
+  max-width: 816px;
+  margin: 0 auto;
+  min-height: 1056px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+.tiptap h1 {
+  font-size: 24pt;
+  font-weight: 700;
+  margin-bottom: 12pt;
+  margin-top: 0;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.tiptap h2 {
+  font-size: 18pt;
+  font-weight: 700;
+  margin-bottom: 8pt;
+  margin-top: 12pt;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.tiptap h3 {
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 6pt;
+  margin-top: 10pt;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.tiptap p {
+  margin-bottom: 6pt;
+  text-align: left;
+}
+
+.tiptap strong {
+  font-weight: bold;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap u {
+  text-decoration: underline;
+}
+
+.tiptap s {
+  text-decoration: line-through;
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding-left: 36pt;
+  margin-bottom: 6pt;
+  margin-top: 0;
+}
+
+.tiptap li {
+  margin-bottom: 3pt;
+}
+
+.tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12pt 0;
+  table-layout: fixed;
+}
+
+.tiptap th,
+.tiptap td {
+  border: 1px solid #000000;
+  padding: 4pt 8pt;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14pt;
+}
+
+.tiptap th {
+  background: #d9d9d9;
+  font-weight: bold;
+}
+
+.tiptap td p,
+.tiptap th p {
+  margin: 0;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid #666;
+  padding-left: 12pt;
+  margin: 6pt 0 6pt 24pt;
+  color: #333;
+  font-style: italic;
+}
+
+.tiptap hr {
+  border: none;
+  border-top: 1px solid #000;
+  margin: 12pt 0;
+}
+
+.tiptap code {
+  font-family: 'Courier New', monospace;
+  background: #f0f0f0;
+  padding: 1pt 4pt;
+  border-radius: 2pt;
+  font-size: 12pt;
+}
+
+.tiptap pre {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4pt;
+  padding: 12pt;
+  margin: 12pt 0;
+  overflow-x: auto;
+  font-size: 10pt;
+}
+
+.tiptap pre code {
+  background: none;
+  padding: 0;
+}
+
+.tiptap a {
+  color: #0563c1;
+  text-decoration: underline;
+}
+
+.tiptap .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #999;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+/* Devanagari / Indian language support */
+.tiptap {
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Print-friendly styling */
+@media print {
+  .tiptap {
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+  }
+}
+
+/* Preview Mode - Direct HTML rendering matching Word formatting */
+.tiptap-preview {
+  outline: none;
+  min-height: 500px;
+  padding: 72px 96px;
+  font-family: 'Times New Roman', 'Mangal', 'Noto Sans Devanagari', serif;
+  font-size: 14pt;
+  line-height: 1.5;
+  color: #000000;
+  background: white;
+  max-width: 816px;
+  min-height: 1056px;
+}
+
+.tiptap-preview h1 {
+  font-size: 24pt;
+  font-weight: 700;
+  margin-bottom: 12pt;
+  margin-top: 0;
+  line-height: 1.3;
+}
+
+.tiptap-preview h2 {
+  font-size: 18pt;
+  font-weight: 700;
+  margin-bottom: 8pt;
+  margin-top: 12pt;
+  line-height: 1.3;
+}
+
+.tiptap-preview h3 {
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 6pt;
+  margin-top: 10pt;
+  line-height: 1.4;
+}
+
+.tiptap-preview p {
+  margin-bottom: 6pt;
+}
+
+.tiptap-preview strong {
+  font-weight: bold;
+}
+
+.tiptap-preview em {
+  font-style: italic;
+}
+
+.tiptap-preview u {
+  text-decoration: underline;
+}
+
+.tiptap-preview ul,
+.tiptap-preview ol {
+  padding-left: 36pt;
+  margin-bottom: 6pt;
+  margin-top: 0;
+}
+
+.tiptap-preview li {
+  margin-bottom: 3pt;
+}
+
+.tiptap-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12pt 0;
+}
+
+.tiptap-preview th,
+.tiptap-preview td {
+  border: 1px solid #000000;
+  padding: 4pt 8pt;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14pt;
+}
+
+.tiptap-preview th {
+  background: #d9d9d9;
+  font-weight: bold;
+}
+
+.tiptap-preview blockquote {
+  border-left: 3px solid #666;
+  padding-left: 12pt;
+  margin: 6pt 0 6pt 24pt;
+  color: #333;
+  font-style: italic;
+}
+
+.tiptap-preview hr {
+  border: none;
+  border-top: 1px solid #000;
+  margin: 12pt 0;
+}
+
+.tiptap-preview a {
+  color: #0563c1;
+  text-decoration: underline;
+}
+
+.tiptap-preview code {
+  font-family: 'Courier New', monospace;
+  background: #f0f0f0;
+  padding: 1pt 4pt;
+  border-radius: 2pt;
+  font-size: 12pt;
+}
+
+.tiptap-preview span {
+  display: inline;
+}
+
+/* ContentEditable spans - Word-like editing */
+[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+}
+
+[contenteditable="true"]:focus {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+[contenteditable="true"]:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Hide caret when not focused */
+[contenteditable="true"]:not(:focus)::selection {
+  background: transparent;
+}
+
+/* Caret styling */
+[contenteditable="true"]:focus {
+  caret-color: #000;
+}
+
+/* Full document contentEditable area */
+.document-content {
+  outline: none;
+  cursor: text;
+}
+
+.document-content:focus {
+  background-color: transparent;
+}
+
+.document-content::selection {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.document-content *::selection {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Ensure smooth text selection across paragraphs */
+.document-content p {
+  margin: 0;
+  padding: 0;
+}
