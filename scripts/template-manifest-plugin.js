@@ -40,63 +40,56 @@ function pickIcon(folderName) {
 }
 
 function scanDirectory(dir) {
-  const categories = [];
-  const rootFiles = [];
-
   let entries = [];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch {
-    return { categories, rootFiles };
+    return { files: [], categories: [] };
   }
 
   const folders = entries.filter((e) => e.isDirectory());
   const files = entries
     .filter((e) => e.isFile())
-    .filter((e) => DOCUMENT_EXTENSIONS.has(path.extname(e.name).toLowerCase()));
-
-  files.forEach((f) => {
-    const rel = path.join(dir, f.name).replace(/\\/g, "/");
-    const publicPath = rel.replace(/^public\//, "");
-    const unsupported = path.extname(f.name).toLowerCase() === ".doc";
-    rootFiles.push({
-      name: humanize(f.name),
-      path: publicPath,
-      unsupported,
+    .filter((e) => DOCUMENT_EXTENSIONS.has(path.extname(e.name).toLowerCase()))
+    .map((f) => {
+      const rel = path.join(dir, f.name).replace(/\\/g, "/");
+      const publicPath = rel.replace(/^public\//, "");
+      const unsupported = path.extname(f.name).toLowerCase() === ".doc";
+      return {
+        name: humanize(f.name),
+        path: publicPath,
+        unsupported,
+      };
     });
-  });
 
-  folders.forEach((folder) => {
-    const folderRel = path.join(dir, folder.name).replace(/\\/g, "/");
-    const nested = scanDirectory(path.join(dir, folder.name));
-    const nestedFiles = [];
-    nested.categories.forEach((c) => {
-      c.name = folder.name + " / " + c.name;
-      nestedFiles.push(...c.files);
-    });
-    nestedFiles.push(...nested.rootFiles);
-
-    if (nestedFiles.length > 0) {
-      categories.push({
+  const categories = folders
+    .map((folder) => {
+      const nested = scanDirectory(path.join(dir, folder.name));
+      if (nested.files.length === 0 && nested.categories.length === 0) {
+        return null;
+      }
+      return {
         name: humanize(folder.name),
         icon: pickIcon(folder.name),
-        files: nestedFiles,
-      });
-    }
-  });
+        files: nested.files,
+        categories: nested.categories,
+      };
+    })
+    .filter(Boolean);
 
-  return { categories, rootFiles };
+  return { files, categories };
 }
 
 function generateManifest() {
-  const { categories, rootFiles } = scanDirectory(TEMPLATES_DIR);
+  const { files, categories } = scanDirectory(TEMPLATES_DIR);
 
   const all = [...categories];
-  if (rootFiles.length > 0) {
+  if (files.length > 0) {
     all.push({
       name: "Other Documents",
       icon: "FolderOpen",
-      files: rootFiles,
+      files,
+      categories: [],
     });
   }
 
