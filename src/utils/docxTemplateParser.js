@@ -248,28 +248,29 @@ function parseParagraph(pElement, styles) {
   }
 
   const runs = [];
-  const runElements = Array.from(pElement.children).filter(
-    (el) => el.localName === "r"
-  );
+  const INLINE_CONTAINERS = [
+    "hyperlink",
+    "smartTag",
+    "ins",
+    "del",
+    "fldSimple",
+    "moveFrom",
+    "moveTo",
+  ];
 
-  runElements.forEach((r) => {
-    const run = parseRun(r, styles);
-    runs.push(run);
-  });
+  function collectInlineRuns(element, isHyperlink) {
+    for (const child of Array.from(element.children)) {
+      if (child.localName === "r") {
+        const run = parseRun(child, styles);
+        if (isHyperlink) run.isHyperlink = true;
+        runs.push(run);
+      } else if (INLINE_CONTAINERS.includes(child.localName)) {
+        collectInlineRuns(child, isHyperlink || child.localName === "hyperlink");
+      }
+    }
+  }
 
-  const hyperlinks = Array.from(pElement.children).filter(
-    (el) => el.localName === "hyperlink"
-  );
-  hyperlinks.forEach((hl) => {
-    const hlRuns = Array.from(hl.children).filter(
-      (el) => el.localName === "r"
-    );
-    hlRuns.forEach((r) => {
-      const run = parseRun(r, styles);
-      run.isHyperlink = true;
-      runs.push(run);
-    });
-  });
+  collectInlineRuns(pElement, false);
 
   return {
     type: "paragraph",

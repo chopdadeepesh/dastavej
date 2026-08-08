@@ -11,13 +11,43 @@ export async function exportDocx(template, editedTexts, filename) {
 
   function collectRuns(element) {
     const children = Array.from(element.children);
-    for (const child of children) {
-      if (child.localName === "r") {
-        allRuns.push(child);
-      } else if (child.localName === "hyperlink") {
-        collectRuns(child);
-      } else if (child.localName === "p" || child.localName === "tc") {
-        collectRuns(child);
+    if (element.localName === "p") {
+      // Match parser order: walk children in document order, recursing into
+      // inline run containers (hyperlink, smartTag, tracked changes, fields).
+      for (const child of children) {
+        if (child.localName === "r") {
+          allRuns.push(child);
+        } else if (
+          child.localName === "hyperlink" ||
+          child.localName === "smartTag" ||
+          child.localName === "ins" ||
+          child.localName === "del" ||
+          child.localName === "fldSimple" ||
+          child.localName === "moveFrom" ||
+          child.localName === "moveTo"
+        ) {
+          collectRuns(child);
+        }
+      }
+    } else {
+      for (const child of children) {
+        if (child.localName === "r") {
+          allRuns.push(child);
+        } else if (
+          child.localName === "hyperlink" ||
+          child.localName === "smartTag" ||
+          child.localName === "ins" ||
+          child.localName === "del" ||
+          child.localName === "fldSimple" ||
+          child.localName === "moveFrom" ||
+          child.localName === "moveTo" ||
+          child.localName === "p" ||
+          child.localName === "tc" ||
+          child.localName === "tr" ||
+          child.localName === "tbl"
+        ) {
+          collectRuns(child);
+        }
       }
     }
   }
@@ -44,7 +74,9 @@ export async function exportDocx(template, editedTexts, filename) {
           textElements[0].setAttribute("xml:space", "preserve");
         }
       } else {
-        rElement.removeChild(textElements[0]);
+        if (textElements.length > 0) {
+          rElement.removeChild(textElements[0]);
+        }
         const newT = doc.createElementNS(
           "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
           "w:t"
