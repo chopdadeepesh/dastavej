@@ -28,9 +28,9 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden gap-3 p-3 bg-slate-950">
         {/* Sidebar */}
-        <div className="w-72 shrink-0">
+        <div className="w-72 shrink-0 rounded-lg overflow-hidden">
           <TemplateBrowser
             categories={templateCategories}
             selectedFile={selectedFile}

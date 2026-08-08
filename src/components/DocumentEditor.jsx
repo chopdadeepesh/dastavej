@@ -281,7 +281,7 @@ export default function DocumentEditor({ file }) {
   fontStack.push("Noto Sans Devanagari", "serif");
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-900 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-slate-900 overflow-hidden rounded-lg">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800/80 border-b border-slate-700">
         <div className="flex items-center gap-3 min-w-0">
