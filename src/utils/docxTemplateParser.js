@@ -16,6 +16,7 @@ export async function parseDocx(filePath) {
 
   let styles = {};
   let theme = {};
+  let settings = { defaultTabStop: 720 };
   let pageSettings = {
     pageWidth: 12240,
     pageHeight: 20160,
@@ -35,11 +36,16 @@ export async function parseDocx(filePath) {
     theme = parseTheme(themeXml);
   }
 
+  if (zip.file("word/settings.xml")) {
+    const settingsXml = await zip.file("word/settings.xml").async("string");
+    settings = parseSettings(settingsXml);
+  }
+
   const paragraphs = [];
   const body = doc.querySelector("w\\:body, body");
 
   if (!body) {
-    return { paragraphs, zip, originalXml: documentXml, doc, styles, theme, pageSettings };
+    return { paragraphs, zip, originalXml: documentXml, doc, styles, theme, settings, pageSettings };
   }
 
   const sectPr = body.querySelector("w\\:sectPr, sectPr");
@@ -61,7 +67,17 @@ export async function parseDocx(filePath) {
     }
   });
 
-  return { paragraphs, zip, originalXml: documentXml, doc, styles, theme, pageSettings };
+  return { paragraphs, zip, originalXml: documentXml, doc, styles, theme, settings, pageSettings };
+}
+
+function parseSettings(settingsXml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(settingsXml, "application/xml");
+  const defaultTabStop = doc.querySelector("w\\:defaultTabStop, defaultTabStop");
+  const val = defaultTabStop
+    ? defaultTabStop.getAttribute("w:val") || defaultTabStop.getAttribute("val")
+    : null;
+  return { defaultTabStop: val ? parseInt(val) : 720 };
 }
 
 function parseStyles(stylesXml) {
@@ -241,6 +257,7 @@ function parseParagraph(pElement, styles) {
   const spacing = getSpacing(pPr);
   const indentation = getIndentation(pPr);
   const pStyleId = getStyle(pPr);
+  const tabStops = getTabStops(pPr);
 
   let resolvedStyle = null;
   if (pStyleId && styles?.styleMap?.[pStyleId]) {
@@ -277,6 +294,7 @@ function parseParagraph(pElement, styles) {
     alignment: alignment || resolvedStyle?.pProps?.alignment || null,
     spacing: mergeSpacing(spacing, resolvedStyle?.pProps?.spacing),
     indentation,
+    tabStops,
     style: pStyleId,
     resolvedStyle,
     runs,
@@ -308,6 +326,8 @@ function parseRun(rElement, styles) {
     formatting,
     element: rElement,
     textElements,
+    tab: Array.from(rElement.children).some((el) => el.localName === "tab"),
+    break: Array.from(rElement.children).some((el) => el.localName === "br"),
   };
 }
 
@@ -409,6 +429,23 @@ function getStyle(pPr) {
   const styleEl = pPr.querySelector("w\\:pStyle, pStyle");
   if (!styleEl) return null;
   return styleEl.getAttribute("w:val") || styleEl.getAttribute("val") || null;
+}
+
+function getTabStops(pPr) {
+  if (!pPr) return [];
+  const tabsEl = pPr.querySelector("w\\:tabs, tabs");
+  if (!tabsEl) return [];
+  const stops = [];
+  tabsEl.querySelectorAll("w\\:tab, tab").forEach((t) => {
+    const pos = parseInt(t.getAttribute("w:pos") || t.getAttribute("pos"));
+    if (!Number.isNaN(pos)) {
+      stops.push({
+        pos,
+        val: t.getAttribute("w:val") || t.getAttribute("val") || "left",
+      });
+    }
+  });
+  return stops;
 }
 
 function parseTable(tblElement, styles) {

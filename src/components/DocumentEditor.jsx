@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { parseDocx } from "../utils/docxTemplateParser";
 import { exportDocx } from "../utils/docxExporter";
 import {
@@ -44,6 +44,30 @@ function resolveSize(run, resolvedStyle, template) {
   if (!size && resolvedStyle?.size?.halfPts) size = resolvedStyle.size.halfPts / 2;
   if (!size && template?.styles?.defaultSize?.halfPts) size = template.styles.defaultSize.halfPts / 2;
   return size || 11;
+}
+
+const measureCtx = (() => {
+  try {
+    return document.createElement("canvas").getContext("2d");
+  } catch {
+    return null;
+  }
+})();
+
+function measureTextWidth(text, pt, fontFamily) {
+  if (!measureCtx || !text) return 0;
+  measureCtx.font = `${pt * (96 / 72)}px ${fontFamily}`;
+  return measureCtx.measureText(text).width;
+}
+
+const pxToTwips = (px) => px * 15;
+
+function nextTabStop(cursorTwips, stops, defaultTab) {
+  for (const s of stops) {
+    if (s.pos > cursorTwips + 1) return s.pos;
+  }
+  const base = Math.floor(cursorTwips / defaultTab) * defaultTab;
+  return base + defaultTab;
 }
 
 function buildTextMap(paragraphs) {
@@ -199,22 +223,72 @@ export default function DocumentEditor({ file }) {
 
     const isEmpty = para.runs.every((r) => !r.text.trim());
 
+    if (isEmpty) {
+      return (
+        <p key={pIdx} style={pStyle}>
+          {para.runs.map((run, rIdx) => {
+            runIndexRef.current++;
+            return null;
+          })}
+          <br />
+        </p>
+      );
+    }
+
+    const tabStops = para.tabStops || [];
+    const defaultTab = template?.settings?.defaultTabStop || 720;
+    let cursorTwips = parseInt(para.indentation?.left) || 0;
+
     return (
       <p key={pIdx} style={pStyle}>
-        {isEmpty ? (
-          <>
-            {para.runs.map((run, rIdx) => {
-              runIndexRef.current++;
-              return null;
-            })}
-            <br />
-          </>
-        ) : (
-          para.runs.map((run, rIdx) => {
-            const idx = runIndexRef.current++;
-            return renderRun(run, para.resolvedStyle, idx);
-          })
-        )}
+        {para.runs.map((run, rIdx) => {
+          const idx = runIndexRef.current++;
+          if (run.break) {
+            return <br key={`r-${rIdx}`} />;
+          }
+          if (run.tab) {
+            const fontFamily = resolveFont(run, para.resolvedStyle, template);
+            const fontSize = resolveSize(run, para.resolvedStyle, template);
+            const textWidthTwips = pxToTwips(
+              measureTextWidth(run.text, fontSize, fontFamily)
+            );
+            const target = nextTabStop(
+              cursorTwips + textWidthTwips,
+              tabStops,
+              defaultTab
+            );
+            const wTwips = Math.max(target - (cursorTwips + textWidthTwips), 1);
+            cursorTwips = target;
+            const spacer = (
+              <span
+                style={{
+                  display: "inline-block",
+                  width: `${twipsToPx(wTwips)}px`,
+                }}
+              />
+            );
+            if (run.text) {
+              return (
+                <Fragment key={`r-${rIdx}`}>
+                  {renderRun(run, para.resolvedStyle, idx)}
+                  {spacer}
+                </Fragment>
+              );
+            }
+            return (
+              <Fragment key={`r-${rIdx}`}>
+                <span data-run={idx} />
+                {spacer}
+              </Fragment>
+            );
+          }
+          const fontFamily = resolveFont(run, para.resolvedStyle, template);
+          const fontSize = resolveSize(run, para.resolvedStyle, template);
+          cursorTwips += pxToTwips(
+            measureTextWidth(run.text, fontSize, fontFamily)
+          );
+          return renderRun(run, para.resolvedStyle, idx);
+        })}
       </p>
     );
   };
